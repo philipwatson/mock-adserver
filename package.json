@@ -1,0 +1,15 @@
+{
+  "name": "mock-adserver",
+  "version": "1.0.0",
+  "description": "Simple tool for quick testing. i.e., mock VAST response",
+  "engines": {
+    "node": "6.3.1"
+  },
+  "main": "lib/vast.js",
+  "scripts": {
+    "start": "node lib/vast.js"
+  },
+  "dependencies": {
+    "hapi": "13.0.0"
+  }
+}
