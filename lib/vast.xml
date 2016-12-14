@@ -2,7 +2,7 @@
    <Ad id="12345">
       <InLine>
          <AdSystem>Adscale</AdSystem><AdTitle>Video Ad</AdTitle>
-         <Impression><![CDATA[http://ih.localctl.test/vum?i=0&ssl=0]]></Impression>
+         <Impression><![CDATA[https://ih.localctl.test/vum?i=0&id=987-654-321]]></Impression>
          <Creatives>
             <Creative>
                <Linear>
