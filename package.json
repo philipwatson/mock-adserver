@@ -10,6 +10,7 @@
     "start": "node lib/vast.js"
   },
   "dependencies": {
-    "hapi": "13.0.0"
+    "hapi": "13.0.0",
+    "hapi-cors-headers": "^1.0.0"
   }
 }
