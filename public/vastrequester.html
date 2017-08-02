@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+<head>
+  <title>VAST Requester</title>
+</head>
+<body>
+
+
+<a href="#">Go Again</a>
+
+<script>
+
+  var requests = 0;
+  var allPinfos = [];
+
+  function updateUi() {
+//    var root = document.getElementById(String(testNum));
+    var index = document.getElementsByClassName("requestsNum").length - 1;
+    document.getElementsByClassName("requestsNum")[index].innerHTML = requests;
+    document.getElementsByClassName("p1Rate")[index].innerHTML = ((pinfos["1"].completes / pinfos["1"].attempts) * 100).toFixed(2) + "%";
+    document.getElementsByClassName("p2Rate")[index].innerHTML = ((pinfos["2"].completes / pinfos["2"].attempts) * 100).toFixed(2) + "%";
+    document.getElementsByClassName("p1Wins")[index].innerHTML = pinfos["1"].attempts;
+    document.getElementsByClassName("p2Wins")[index].innerHTML = pinfos["2"].attempts;
+  }
+
+
+  var parser = new DOMParser();
+
+  function performVastRequest(times) {
+
+    function processVastResponse(res) {
+      if (!res.ok) {
+        working = false;
+        return;
+      }
+      res.text().then(processVastBody);
+    }
+
+    function tryAgain() {
+      if (--times > 0) {
+        setTimeout(function () {
+          performVastRequest(times)
+        }, 1);
+      }
+      else {
+        working = false;
+      }
+    }
+
+    function processVastBody(body) {
+      requests++;
+
+      var dom = parser.parseFromString(body, "text/xml");
+      var impressions = dom.getElementsByTagName("Impression");
+      var adTitles = dom.getElementsByTagName("AdTitle");
+
+      if (adTitles.length > 0) {
+        var partnerId = (adTitles[0]).textContent;
+
+        var pinfo = pinfos[partnerId];
+
+        pinfo.attempts += 1.0;
+        updateUi();
+
+        var impression = undefined;
+        for (var i = 0; i < impressions.length; i++) {
+          if (impressions[i].textContent.indexOf("/vi")) {
+            impression = impressions[i];
+            break;
+          }
+        }
+
+        if (impression) {
+          var url = impression.textContent;
+
+          if (Math.floor(Math.random() * 100) < pinfo.chance) {
+            fetch(url, {method: "GET"}).then(function (res) {
+              if (!res.ok) {
+                console.log("Error");
+              }
+              else {
+                pinfo.completes += 1;
+                updateUi();
+                tryAgain();
+              }
+            });
+          }
+          else {
+            updateUi();
+            tryAgain();
+          }
+        }
+        else {
+          working = false;
+        }
+      }
+      else {
+        working = false;
+      }
+    }
+
+    let vastFetch = fetch("http://vsh.localctl.test/vah/?sid=MjYxNjQw", {method: "GET"});
+    vastFetch.then(processVastResponse)
+  }
+
+  var testNum = 0;
+  var working = false;
+
+  var actionLink = document.getElementsByTagName("a")[0];
+
+
+  var pinfos = null;
+
+  actionLink.addEventListener("click", function() {
+    if (!working) {
+      pinfos = {
+        "1": {
+          attempts: 0.0,
+          completes: 0.0,
+          chance: 80,
+        },
+        "2": {
+          attempts: 0.0,
+          completes: 0.0,
+          chance: 60,
+        }
+      };
+      allPinfos.push(pinfos);
+      requests = 0;
+      working = true;
+      testNum++;
+
+      var divEl = document.createElement("div");
+      divEl.id = String(testNum);
+
+      var htmlBlock = `<p>time: <span>${new Date()}</span></p>
+      <p># requests: <span class="requestsNum">0</span></p>
+
+      <p>partner 1 completion rate: <span class="p1Rate">0</span></p>
+      <p>partner 1 wins: <span class="p1Wins">0</span></p>
+
+      <p>partner 2 completion rate: <span class="p2Rate">0</span></p>
+      <p>partner 2 wins: <span class="p2Wins">0</span></p><hr/>`;
+
+      divEl.innerHTML = htmlBlock;
+
+      document.body.insertBefore(divEl, actionLink);
+
+      setTimeout(function(){
+        window.scrollTo(0, document.body.scrollHeight);
+        performVastRequest(100)
+      }, 1);
+    }
+
+
+
+  });
+
+</script>
+</body>
+</html>
